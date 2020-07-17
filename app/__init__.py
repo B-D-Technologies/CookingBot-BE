@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object('config.Config')
@@ -9,5 +10,5 @@ def create_app():
     
     with app.app_context():
         from . import routes
-        db.create_all()
+        # db.create_all()
         return app
