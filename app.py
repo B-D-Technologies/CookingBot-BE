@@ -11,8 +11,8 @@ from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 
 from models.user import User
 from models.recipe import Recipe
-from shcemas.user import UserSchema
-from schemas.recipe import Recipe
+from schemas.user import UserSchema, user_schema, users_schema
+from schemas.recipe import Recipe, recipe_schema, recipes_schema
 
 
 application = Flask(__name__)
@@ -24,6 +24,37 @@ application.config['JWT_SECRET_KEY'] = environ.get('JWT_SECRET_KEY')
 db.init_app(application)
 ma.init_app(application)
 jwt = JWTManager(application)
+
+
+'''
+test data
+'''
+
+@application.cli.command('db_create')
+def db_create():
+    db.create_all()
+    print('DB created')
+
+
+@application.cli.command('db_drop')
+def db_drop():
+    db.drop_all()
+    print('DB dropped')
+
+
+@application.cli.command('db_seed')
+def db_seed():
+    fish_tacos = Recipe(recipe_name='Fish tacos', recipe_description='Delicios fish tacos from Tijuana', meal='Always', time=25, ingredients='fish and torillas', instructions='Fry everything together and hope for the best')
+    chicken_katsu = Recipe(recipe_name='Chicke Katsu', recipe_description='The best chicken katsu', meal='Always', time=25, ingredients='Chiken and katsu curry', instructions='order online from cocoro on delivroo, must me in Kentish')
+
+    db.session.add(fish_tacos)
+    db.session.add(chicken_katsu)
+
+    test_user = User(name='William', email='test@test.com', password='Password')
+
+    db.session.add(test_user)
+    db.session.commit()
+    print('Database seeded')
 
 
 @application.before_first_request
