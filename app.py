@@ -7,7 +7,12 @@ from dotenv import load_dotenv
 from db import db
 from ma import ma
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token
+
+
 from models.user import User
+from models.recipe import Recipe
+from shcemas.user import UserSchema
+from schemas.recipe import Recipe
 
 
 application = Flask(__name__)
