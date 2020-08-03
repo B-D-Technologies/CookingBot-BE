@@ -6,17 +6,19 @@ from os import environ, path
 from dotenv import load_dotenv
 from flask_marshmallow import Marshmallow
 from db import db
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 from models.user import User
-
 
 
 application = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'users.db')
+aaplication.config['JWT_SECRET_KEY'] = environ.get('JWT_SECRET_KEY')
+
 
 db.init_app(application)
-#db = SQLAlchemy(application)
 ma = Marshmallow(application)
+jwt = JWTManager(application)
 
 
 @application.before_first_request
@@ -30,9 +32,7 @@ def landing():
     return 'signup or login'
 
 
-# User
-# Sign up
-@application.route('/sign_up', methods=['POST'])
+@application.route('/sign_up', methods=['GET', 'POST'])
 def sign_up():
     email = request.form['email']
     test = User.query.filter_by(email=email).first()
@@ -45,6 +45,23 @@ def sign_up():
         db.session.add(user)
         db.session.commit()
         return jsonify(message=f'Welcome aboard {name} 👩‍🍳'), 201
+
+
+@application.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.is_json:
+        email = request.json['email']
+        password = request.json['password']
+    else:
+        email = request.form['email']
+        password = request.form['password']
+
+    test = User.query.filter_by(email=email, password=password).first()
+    if test:
+        access_token = create_access_token(identity=email)
+        return jsonify(message='login successful', access_token=access_token)
+    else:
+        return jsonify(message='bad email or password'), 401
 
 
 
