@@ -4,8 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, Float, Text
 from os import environ, path
 from dotenv import load_dotenv
-from flask_marshmallow import Marshmallow
 from db import db
+from ma import ma
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token
 from models.user import User
 
@@ -13,11 +13,11 @@ from models.user import User
 application = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'users.db')
-aaplication.config['JWT_SECRET_KEY'] = environ.get('JWT_SECRET_KEY')
+application.config['JWT_SECRET_KEY'] = environ.get('JWT_SECRET_KEY')
 
 
 db.init_app(application)
-ma = Marshmallow(application)
+ma.init_app(application)
 jwt = JWTManager(application)
 
 
@@ -27,6 +27,8 @@ def create_tables():
 
 
 # Endpoints
+
+# User
 @application.route('/')
 def landing():
     return 'signup or login'
@@ -64,17 +66,67 @@ def login():
         return jsonify(message='bad email or password'), 401
 
 
+# Add retrieve password at some point
 
-# POST /user data: {id:int, name:str, email:str, password:str}
-#log in
-# POST /user data: {email:str, password:str}
 
-# Recipe
-# POST /recipe/<str:name>/...
-# GET /recipes
-# GET /recipe/<str:name>
-# PUT /recipe/<str:name>...
-# DEL /recipe/<str:name>
+# Recipes
+
+@application.route('/recipes', methods=['GET'])
+def recipes():
+    recipes_list = Recipe.query.all()  #please fix this for the love of god
+    result = recipes_schema.dump(recipes_list)
+    return jsonify(result)
+
+
+#should this be by id? user will not query by id
+@application.route('/recipe_details/<string:recipe_name>')
+def recipe_details(recipe_name: String):
+    recipe = Recipe.query.filter_by(recipe_name).first()
+    if recipe:
+        result = recipe_schema.dumop(recipe)
+        return jsonify(result)
+    else:
+        return jsonify(message='That recipe has not been saved yet'), 404
+
+
+#can the recipes be associated with each user?
+@application.route('/add_recipe', methods=['GET', 'POST'])
+@jwt_required
+def add_recipe():
+    recipe_name = request.form['recipe_name']
+    test = Recipe.query.filter_by(recipe_name=recipe_name).first()
+    if test:
+        return jsonify('You already have a recipe with that name in your recipes'), 409
+        # this should alos display the recipe that matches the name or similar
+    else:
+        recipe_name = request.form['recipe_name']
+        recipe_description = request.form['recipe_description']
+        meal = request.form['meal']
+        time = float(request.form['time'])
+        ingredients = request.form['ingredients']
+        instructions = request.form['instructions']
+
+        new_recipe = Recipe(recipe_name=recipe_name, recipe_description=recipe_description, meal=meal, time=time, ingredients=ingredients, instructions=instructions)
+        db.session.add(new_recipe)
+        db.session.commit()
+        return jsonify(message='You added a recipe'), 201
+
+
+@application.route('/update_recipe', methods=['GET', 'PUT'])
+@jwt_required
+def update_recipe():
+    recipe_name = str(request.form['recipe_name'])
+    recipe = Recipe.query.filter_by(recipe_name=recipe_name).first()
+    if recipe:
+        recipe.recipe_name = request.form['recipe_name']
+        recipe.recipe_description = request.form['recipe_type']
+        recipe.meal = request.form['meal']
+        recipe.time = float(request.form['time'])
+        recipe.ingredients = request.form['ingredients']
+        recipe.instructions = request.form['instructions']
+        return jsonify(message=f'{recipe.recipe_name} created'), 202
+    else:
+        return jsonify(message='that recipe does not exist'), 404
 
 
 if __name__ == '__main__':   
