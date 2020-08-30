@@ -5,10 +5,10 @@
 First create a virtual machine:
 
 ```
-python3 -m venv env
+python3 -m venv venv
 ```
 
-Then use  `source env/bin/activate` to enter into the VM and you can use `deactivate` to leave the VM.
+Then use  `source venv/bin/activate` to enter into the VM and you can use `deactivate` to leave the VM.
 
 Install the required dependencies:
 ```

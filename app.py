@@ -13,11 +13,11 @@ from models.user import User
 from models.recipe import Recipe
 from schemas.user import UserSchema, user_schema, users_schema
 from schemas.recipe import Recipe, recipe_schema, recipes_schema
-
+load_dotenv()
 
 application = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
-application.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'users.db')
+application.config['SQLALCHEMY_DATABASE_URI'] = environ.get('SQLALCHEMY_DATABASE_URI')
 application.config['JWT_SECRET_KEY'] = environ.get('JWT_SECRET_KEY')
 
 
